@@ -25,6 +25,7 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -44,6 +45,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -208,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (download_file != null){
                     try {
-                        send_cmd("fn:" + download_file.getName() + " fl:" + download_file.length());
+                        send_cmd("fn:" + "test.txt" + " fl:" + 11);
                         Thread.sleep(300);
                         send_cmd("download");
                     } catch (InterruptedException e) {
@@ -313,6 +315,7 @@ public class MainActivity extends AppCompatActivity {
             BluetoothGattDescriptor descriptor = mcharacteristic.getDescriptor(Descriptor_UUID);
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             gatt.writeDescriptor(descriptor);
+
         }
 
         @Override
@@ -416,20 +419,36 @@ public class MainActivity extends AppCompatActivity {
                 case CLASSIC_STATE_CONNECTED:
                     add_status("CLASSIC CONNECTED");
                     if (send_file) {
+                        FileInputStream is = null;
                         try {
-                            add_status("SENDING FILE...");
-                            long mycount = download_file.length();
+                            Context context = getApplicationContext();
+                            send_cmd("Sending File");
+                            Thread.sleep(300);
+                            add_status("SENDING FILE..."+ download_file);
+                            FileOutputStream test_file = new FileOutputStream(context.getFilesDir().getPath().toString() + "test.txt");
+                            test_file.write("hello world".getBytes());
+                            test_file.close();
+                            is = new FileInputStream(context.getFilesDir().getPath().toString()  + "test.txt");
+                            send_cmd("opening file input stream");
+                            Thread.sleep(300);
 
-                            FileInputStream is = new FileInputStream(download_file);
                             byte[] buffer = new byte[1024];
                             int length;
                             add_status("frankolo2");
                             while ((length = is.read(buffer)) > 0) {
-                                sendReceive.write(buffer, 0, length);
+                                send_cmd("writing file buffer to BT" + length);
+                                Thread.sleep(300);
+
+                                sendReceive.write(buffer);
                             }
                             add_status("frankolo3");
-                        } finally {
-                            is.close();
+                        } catch(Exception e) {
+                            add_status("exception occurred:" + e);
+                        }
+                        finally {
+                            try {
+                                is.close();
+                            } catch(Exception e ){}
                             sendReceive.close();
                         }
                     }
