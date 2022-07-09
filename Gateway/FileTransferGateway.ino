@@ -29,7 +29,11 @@
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 
-#define SD_CS 5
+#define SD_CS 23
+#define  SD_SCK 17
+#define SD_MOSI 12
+#define SD_MISO 13
+SPIClass sd_spi(HSPI);
 
 BluetoothSerial SerialBT;
 
@@ -99,9 +103,9 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 
 void setup() {
   Serial.begin(115200);
+  initSD();
   Serial.println("Starting BLE work!");
   initBT();
-  initSD();
 }
 
 void initBT(){
@@ -147,7 +151,9 @@ void initBT(){
 }
 
 void initSD(){
-  if(!SD.begin( 4, SPI, 80000000  ))
+  sd_spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
+  //  if(!SD.begin( 4, SPI, 80000000  ))
+  if(!SD.begin(SD_CS, sd_spi)) {
   {
     Serial.println("Card Mount Failed");
     return;
